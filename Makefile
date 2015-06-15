@@ -17,7 +17,7 @@ all:  $(EXECUTABLE)
 
 
 $(EXECUTABLE):   $(OBJECTS) $(OBJECTS_START)
-	$(CC) $(LDFLAGS)  $(OBJECTS)  $(OBJECTS_START) -o $@
+	$(CC)  $(OBJECTS)  $(OBJECTS_START) $(LDFLAGS)    -o $@
 
 $(OBJECTS_START): mac-darktest.c
 	$(CC)  -D_GNU_SOURCE  $(CFLAGS) -o $@ $<
