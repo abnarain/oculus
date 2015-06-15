@@ -1,0 +1,97 @@
+#!/bin/sh /etc/rc.common
+#
+#Start and Stop functions to run the ipkg package
+#
+PIDFILE=/var/run/wifi_beacons-tmpfs.pid
+HASH_KEY=/etc/bismark/passive.key
+START=99
+
+start(){
+    iw phy phy2 interface add phy2 type monitor flags fcsfail control otherbss 2>/dev/null
+    p2=$?
+    if [ "$p2" -eq "0" ];then
+			mon0='phy2'
+			wlan0='wlan2'
+			echo "phy2 created " 
+    else
+			echo "Err: can't creat phy2 "			
+    fi
+    
+	
+    iw phy phy3 interface add phy3 type monitor flags fcsfail control otherbss 2>/dev/null
+    p3=$?
+    if [ "$p3" -eq "0" ];then
+			mon1='phy3'
+			wlan1='wlan3'
+			echo "phy3 created  " 
+    else
+			echo "Err: can't creat phy3"
+    fi
+
+
+		if [  "$p3" -ne "0" ] && [ "$p2" -ne "0" ];then								
+	    iw phy phy0 interface add phy0 type monitor flags fcsfail control otherbss 2>/dev/null
+  	  p0=$?
+    	if [ "$p0" -eq "0" ];then
+				mon0='phy0'
+				wlan0='wlan0'
+				echo "phy0 created  " 
+  	  else
+				echo "Err: can't creat phy0"
+			exit 1
+  	  fi
+		
+	    iw phy phy1 interface add phy1 type monitor flags fcsfail control otherbss 2>/dev/null
+  	  p1=$?
+    	if [ "$p1" -eq "0" ];then
+				mon1='phy1'
+				wlan1='wlan1'
+				echo "phy1 created  " 
+	    else
+				echo "Err: can't creat phy1"
+			exit 1
+	    fi
+		fi
+#check the argument
+    if [ -f $PIDFILE ]; then
+			echo "pidfile $PIDFILE already exists; mac analyzer already running"
+			exit 1
+    fi
+
+    start-stop-daemon -S \
+	-x /usr/bin/wifi_beacons-tmpfs \
+	-p $PIDFILE \
+	-m -b $mon0
+
+		echo "installed on phy0 interface; now running phy1 interface"
+    sleep 30
+    start-stop-daemon -S \
+	-x /usr/bin/wifi_beacons-tmpfs \
+	-p $PIDFILE \
+	-m -b $mon1
+}
+
+
+stop(){
+    
+    [ -f $PIDFILE ] && {
+	start-stop-daemon -K -q -p $PIDFILE -s TERM
+	rm -f $PIDFILE
+
+    }
+    
+
+    iw dev phy2 del 2>/dev/null
+    iw dev phy3 del 2>/dev/null
+
+    
+    iw dev phy0 del 2>/dev/null
+    iw dev phy1 del 2>/dev/null
+    echo "deleted the monitor interfaces"
+    
+}
+
+restart(){
+    stop
+    start
+}
