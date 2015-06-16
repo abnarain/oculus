@@ -412,104 +412,6 @@ static const float ieee80211_float_htrates[MAX_MCS_INDEX+1][2][2] = {
 };
 #endif
 
-int tx_path(const unsigned char* p,
-	    int pkt_len,
-	    int cap_len )
-{
-  u_int32_t present ;
-  u_int16_t it_len;
-  int offset=0;
-  struct ieee80211_radiotap_header *hdr;
-  hdr = (struct ieee80211_radiotap_header *)p;
-  it_len = pletohs(&hdr->it_len);
-  u_int16_t radiotap_len;
-  radiotap_len =it_len;
-  present = pletohl(&hdr->it_present);
-  offset += sizeof(struct ieee80211_radiotap_header);
-  if (present & BIT(IEEE80211_RADIOTAP_TSFT)) {
-   printf ("\n tx: tsft %llu \n",  pletoh64(p+offset));
-#ifdef DEBUG
-    offset += 8;
-  }
-  if( present & BIT(IEEE80211_RADIOTAP_RATE)){
-    int rate =*(p+offset);
-    if (rate >= 0x80 && rate <= 0x8f) {
-	printf("rate %u \n",rate & 0x7f);
-    } else {
-	printf("**RATE** %.1f \n", (float)rate / 2);
-    }
-      offset +=2 ;
-  }
-  if (present & BIT(IEEE80211_RADIOTAP_TX_FLAGS)){
-    u_int16_t tx_flags =pletohs(p+offset);
-//  printf("tx_flags: %"PRIu16"\n",tx_flags);
-    printf("act_flag=%02x %02x \n",*(p+offset),*(p+offset+1));
-    if (tx_flags & IEEE80211_RADIOTAP_F_TX_CTS)
-      printf("flag is cts \n");
-    if(tx_flags & IEEE80211_RADIOTAP_F_TX_RTS)
-      printf("flag is rts \n");
-    if(tx_flags & IEEE80211_RADIOTAP_F_TX_NOACK)
-      printf("flag is no ack\n");
-   	u_int16_t h = 0x40 ; //IEEE80211_RADIOTAP_F_TX_AGG ;
-	u_char *t = &h ;
-	printf("tx flag  %x = %02x %02x ; \n",h,*t, *(t+1));
-	if (tx_flags & h){
-	  printf("this is aggregated frame \n");
-	}else {
-	  printf("this is not aggr frame\n");
-	}
-	offset +=2;
-  }
-	//printf("\n%02x\n",*(p+offset));
-  if (present & BIT(IEEE80211_RADIOTAP_DATA_RETRIES)){
-    if (debug_mode) {
-      printf(" data retries %u \n", *(p+offset));
-    }
-    offset++;
-  }
-  if( present & BIT(IEEE80211_RADIOTAP_MCS)){
-    //printf(" mcs\n ");
-    u_int8_t mcs_known, mcs_flags;
-    u_int8_t mcs;
-    u_int8_t bandwidth;
-    u_int8_t gi_length;
-    u_int8_t can_calculate_rate = 1 ;
-    mcs_known = *(p+offset) ;
-    mcs_flags =  *(p+offset+1);
-    mcs = *(p +offset+ 2);
-    if (debug_mode) {
-      printf(" %02x %02x ;mcs_1:%02x mcs_2:%0x mcs_3:%02x \n", *(p+offset-1), *(p+offset-2) ,mcs_known,mcs_flags,mcs);
-    }
-    if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_BW) {
-      bandwidth = ((mcs_flags & IEEE80211_RADIOTAP_MCS_BW_MASK) == IEEE80211_RADIOTAP_MCS_BW_40) ?
-        1 : 0;
-    } else {
-      bandwidth = 0;
-      can_calculate_rate = FALSE; //no bandwidth
-    }
-    if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_GI) {
-      gi_length = (mcs_flags & IEEE80211_RADIOTAP_MCS_SGI) ?  1 : 0;
-    } else {
-      gi_length = 0;
-      can_calculate_rate = FALSE; //no GI width
-    }
-    if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_MCS) {
-      can_calculate_rate =1;
-    } else{
-      can_calculate_rate = FALSE; // no MCS index
-    }
-    if (can_calculate_rate && mcs <= MAX_MCS_INDEX
-        && ieee80211_float_htrates[mcs][bandwidth][gi_length] != 0.0 ) {
-      printf("Data Rate: %.1f Mb/s", ieee80211_float_htrates[mcs][bandwidth][gi_length]);
-    }
-
-    offset +=3 ;
-  }
-#endif
-mac_header_parser(p,pkt_len,cap_len, 1,radiotap_len);
-return 0 ;
-}
-
 int rx_path(const unsigned char * p, int pkt_len, int cap_len )
 {
   u_int32_t present ;
@@ -682,12 +584,10 @@ static void pkt_update(u_char* const user,
   struct ieee80211_radiotap_header *hdr;
   hdr = (struct ieee80211_radiotap_header *)p;
   it_len = pletohs(&hdr->it_len);
-  printf(" length of radiotap is %u \n",it_len) ;
-  if (it_len == 14){
-  // tx_path(p,header->len,header->caplen);
-  }else if (it_len ==26 || it_len ==29 ){
-  rx_path(p, header->len,header->caplen);
+  if (it_len ==26 || it_len ==29 ){
+    rx_path(p, header->len,header->caplen);
   }else {
+  printf(" fix the length of radiotap is %u \n",it_len) ;
   }
   if (sigprocmask(SIG_UNBLOCK, &block_set, NULL) < 0) {
     perror("sigprocmask");

@@ -9,9 +9,9 @@ CFLAGS +=-DTRANSPORT_LAYER_CAPTURE
 SOURCES= util.c sha1.c   mac-parser.c 
 OBJECTS=  $(SOURCES:.c=.o)
 
-OBJECTS_START= mac-darktest.o 
+OBJECTS_START= oculus.o 
 #OBJECTS_WRITE= write.o
-EXECUTABLE=wifi_dump
+EXECUTABLE=oculus
 
 all:  $(EXECUTABLE)
 
@@ -19,7 +19,7 @@ all:  $(EXECUTABLE)
 $(EXECUTABLE):   $(OBJECTS) $(OBJECTS_START)
 	$(CC)  $(OBJECTS)  $(OBJECTS_START) $(LDFLAGS)    -o $@
 
-$(OBJECTS_START): mac-darktest.c
+$(OBJECTS_START): oculus.c
 	$(CC)  -D_GNU_SOURCE  $(CFLAGS) -o $@ $<
 
 # -DCONFIG_LIBNL20   -I$(STAGING_DIR)/usr/include/mac80211 -I$(STAGING_DIR)/usr/include/libnl-tiny
