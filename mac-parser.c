@@ -14,7 +14,7 @@
 #include "td-util.h"
 #include "pkts.h"
 #include "address_table.h"
-
+#include "ctype.h"
 
 int debug_mode=1;
 int mgmt_beacon_count =0 ;
@@ -84,20 +84,19 @@ int mac_header_parser(unsigned char * p,
     mgmt_h = (struct mgmt_header_t *) p;
     switch(FC_SUBTYPE(fc)){
     case ST_BEACON:
-        return -1;
         printf("st beacon\n");
-      memcpy(mlh.src_mac,mgmt_h->sa,6);
-      mlh.pkt_len=pkt_len;
-      mlh.frame_control = fc ;
-      mlh.seq_ctrl =  pletohs(&(mgmt_h->seq_ctrl));
-      parse_beacon(p+MGT_FRAME_HDR_LEN, (unsigned int)cap_len, &mlh );
-      mgmt_beacon_count++;
+	memcpy(mlh.src_mac,mgmt_h->sa,6);
+	mlh.pkt_len=pkt_len;
+	mlh.frame_control = fc ;
+	mlh.seq_ctrl =  pletohs(&(mgmt_h->seq_ctrl));
+	parse_beacon(p+MGT_FRAME_HDR_LEN, (unsigned int)cap_len, &mlh );
+	mgmt_beacon_count++;
     default :
-    memcpy(mlh_t.src_mac,mgmt_h->sa,6);
-    mlh_t.pkt_len=pkt_len;
-    mlh_t.frame_control = fc ;
-    mlh_t.seq_ctrl =  pletohs(&(mgmt_h->seq_ctrl)); //EXTRACT_LE_16BITS(mgmt_h->seq_ctrl);
-    break ;
+      memcpy(mlh_t.src_mac,mgmt_h->sa,6);
+      mlh_t.pkt_len=pkt_len;
+      mlh_t.frame_control = fc ;
+      mlh_t.seq_ctrl =  pletohs(&(mgmt_h->seq_ctrl)); //EXTRACT_LE_16BITS(mgmt_h->seq_ctrl);
+      break ;
     }
     break ;
   case CONTROL_FRAME:
@@ -531,6 +530,34 @@ int transport_header_parser(u_int16_t fc,unsigned char* p_start,
 #endif
 
 /*Functions for parsing management frames */
+
+int
+fn_print(register const u_char *s, register const u_char *ep)
+{
+  printf("SSID:"); 
+  register int ret; 
+  register u_char c;    
+    
+  ret = 1;            /* assume truncated */
+  while (ep == NULL || s < ep) {
+    c = *s++;
+    if (c == '\0') {
+      ret = 0;
+      break;
+    }
+    if (!isascii(c)) {
+      c = toascii(c);
+      putchar('M');
+      putchar('-');
+    }
+    if (!isprint(c)) {
+      c ^= 0x40;  /* DEL to ?, others to alpha */
+      putchar('^');
+    }
+    putchar(c);
+  }       
+  return(ret);
+} 
 int parse_elements(struct mgmt_body_t* pbody,
 		   const u_char *p,
 		   int offset,
@@ -571,17 +598,15 @@ int parse_elements(struct mgmt_body_t* pbody,
           return 0;
         if (length < ssid.length)
           return 0;
-	//  memcpy(&ssid.ssid, p + offset, ssid.length);
+	memcpy(&ssid.ssid, p + offset, ssid.length);
         offset += ssid.length;
         length -= ssid.length;
       }
-      /*
       ssid.ssid[ssid.length] = '\0';
       if (!pbody->ssid_present) {
         pbody->ssid = ssid;
         pbody->ssid_present = 1;
-      }
-      */
+      }      
       break;
     case E_CHALLENGE:
       if (!TTEST2(*(p + offset), 2))
@@ -740,11 +765,11 @@ int parse_beacon(unsigned char* p,
   length -= IEEE802_11_CAPINFO_LEN;
 
   ret = parse_elements(&pbody, p, offset, length,mlh);
-  /*
     if (pbody.ssid_present) {
-    fn_print(pbody.ssid.ssid, NULL,paket);
+      fn_print(pbody.ssid.ssid, NULL);
+      printf("\n");
     }
-  */
+  
   //  if (pbody.ds_present) {
   //    printf(" mgmt packet channel = %d\n",pbody.ds.channel);
   //  }

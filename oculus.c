@@ -512,8 +512,8 @@ int rx_path(const unsigned char * p, int pkt_len, int cap_len )
 	&& ieee80211_float_htrates[mcs][bandwidth][gi_length] != 0.0 ) {
       printf("Data Rate: %.1f Mb/s", ieee80211_float_htrates[mcs][bandwidth][gi_length]);
     }
-   // printf(" mcs \n");
-    offset += 3 ;
+   printf(" mcs \n");
+   offset += 3 ;
   }
   printf("\n");
   offset +=6;
@@ -528,8 +528,6 @@ int rx_path(const unsigned char * p, int pkt_len, int cap_len )
 #endif
   if (bad_fcs) {
     printf("bad fcs \n");
-   //mac_header_err_parser(p, pkt_len,cap_len);
-
   }
   else{
    mac_header_parser(p,pkt_len, cap_len,0,radiotap_len);
@@ -610,7 +608,7 @@ static void handle_signals(int sig)
     if (alarm_count % ALARMS_PER_UPDATE == 0) {
       drops();
     }
-    printf(" write update \n");
+    //printf(" write update \n");
    // write_update();
     set_next_alarm();
   }
@@ -657,7 +655,20 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Couldn't open device %s: %s\n", argv[1], errbuf);
     return -1;
   }
-  printf(" DLT_IEEE802_11_RADIO: %d \n", pcap_datalink(pcap_handle));
+  switch (pcap_datalink(pcap_handle)) {
+
+  case DLT_IEEE802_11_RADIO:
+    printf("DLT_IEEE802_11_RADIO\n");
+    break;
+
+  case DLT_PRISM_HEADER:
+    printf("DLT_PRISM_HEADER \n");
+        
+  default:
+    printf("!!! unknown header; cannot be parsed by this program %s !\n", argv[1]);
+    return -1; 
+
+  }   
 
   return pcap_loop(pcap_handle, -1, pkt_update, NULL);
 }
