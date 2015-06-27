@@ -28,7 +28,6 @@ unsigned char * snapend ;
 static unsigned int alarm_count = 0;
 static int debug_mode =1;
 sigset_t block_set;
-char ifc;
 
 static pcap_t* pcap_handle = NULL;
 #define DEBUG 1 
@@ -636,13 +635,21 @@ static void initialize_signal_handler(void)
 int main(int argc, char *argv[])
 {
   char errbuf[PCAP_ERRBUF_SIZE];
+  int option = 0;
+  char *interface=NULL;
+  while((option=getopt (argc, argv,"i:")) !=-1)
+    { 
+      switch(option)
+	{
+	case 'i':
+	  interface=strdup(optarg);	  
+	  printf("argv1 =%s\n", argv[1]);
+	  break;
+	default:
+      return -1;
+	}
+    }
 
-  if (argc <2){
-    fprintf(stderr,"Usage : %s monitor interface ", argv[0]);
-    exit(EXIT_FAILURE);
-  }
-  printf("argv1 =%s\n", argv[1]);
-  ifc = argv[1][3];
   struct timeval start_timeval;
   gettimeofday(&start_timeval, NULL);
   start_timestamp_microseconds   = start_timeval.tv_sec * NUM_MICROS_PER_SECOND + start_timeval.tv_usec;
@@ -650,9 +657,9 @@ int main(int argc, char *argv[])
   initialize_signal_handler();
   set_next_alarm();
 
-  pcap_handle = pcap_open_live(argv[1], BUFSIZ, PCAP_PROMISCUOUS, PCAP_TIMEOUT_MILLISECONDS, errbuf);
+  pcap_handle = pcap_open_live(interface, BUFSIZ, PCAP_PROMISCUOUS, PCAP_TIMEOUT_MILLISECONDS, errbuf);
   if (!pcap_handle) {
-    fprintf(stderr, "Couldn't open device %s: %s\n", argv[1], errbuf);
+    fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
     return -1;
   }
   switch (pcap_datalink(pcap_handle)) {
