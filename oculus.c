@@ -581,7 +581,7 @@ static void pkt_update(u_char* const user,
   struct ieee80211_radiotap_header *hdr;
   hdr = (struct ieee80211_radiotap_header *)p;
   it_len = pletohs(&hdr->it_len);
-  if (it_len ==26 || it_len ==29 ){
+  if (it_len ==26 || it_len ==29 || it_len ==18 ){
     rx_path(p, header->len,header->caplen);
   }else {
   printf(" fix the length of radiotap is %u \n",it_len) ;
