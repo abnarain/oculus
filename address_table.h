@@ -27,6 +27,8 @@
 
 #include <zlib.h>
 
+#define HOMESAW_RX_FRAME_HEADER 4
+// totally not needed as per demands of Ming for the prototype
 typedef struct {
   unsigned char mgt_content[HOMESAW_RX_FRAME_HEADER + sizeof( struct mgmt_beacon_layer_header)];
 } mgmt_beacon_address_table_entry_t;

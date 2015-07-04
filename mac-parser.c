@@ -205,8 +205,6 @@ int mac_header_parser(unsigned char * p,
 	print_mac(ADDR1,"1 addr1");
       }
     } else if (!FC_TO_DS(fc) && FC_FROM_DS(fc)) {
-	if (radiotap_len ==HOMESAW_TX_FRAME_HEADER )
-        printf("mac address map \n");//	    mac_address_map(&devices,ADDR1);
       memcpy(dlh.src_mac,ADDR3,6);
       memcpy(dlh.dest_mac,ADDR1,6);
 //      printf("f in anon 2 \n");
@@ -254,7 +252,7 @@ int mac_header_err_parser(unsigned char *p,
 {
 
   u_char * p_start = p ;
-  p += HOMESAW_RX_FRAME_HEADER;
+  p += 4; // random value ... since this function is not needed in current implementation
   struct mgmt_header_t *mgmt_h =NULL;
   memset(&clh,0,sizeof(struct control_layer_header));
   memset(&mlh_t,0,sizeof(struct mgmt_layer_err_header));

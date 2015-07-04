@@ -1,6 +1,6 @@
 /*
 Author : Abhinav Narain
-Code Time period for the software : 1 month (including kernel modifications)
+Userland application to sniff on the channel
 */
 
 #include <pcap.h>

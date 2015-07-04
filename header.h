@@ -18,7 +18,7 @@ extern int mgmt_beacon_count ;
 extern time_t current_timestamp ;  
 extern char bismark_id[256];
 int write_update(void);
-extern char ifc ;
+
 
 #define pletohs(p)  ((u_int16_t)                       \
   ((u_int16_t)*((const u_int8_t *)(p)+1)<<8|  \
@@ -47,6 +47,4 @@ int scanning(void);
 #define UPDATE_DROPS_FILENAME    "/tmp/bismark-uploads/mac-analyzer/%s-%" PRIu64 "-drops-%d-%c.gz"
 #define PENDING_UPDATE_DROPS_FILENAME "/tmp/mac-analyzer/current-drops-update-%c.gz"
 
-#define HOMESAW_RX_FRAME_HEADER 58
-#define HOMESAW_TX_FRAME_HEADER 58
 #endif
